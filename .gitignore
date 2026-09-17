@@ -1,0 +1,14 @@
+node_modules/
+dist/
+build/
+
+.env
+.env.local
+
+*.csv
+*.zip
+dulieu/
+
+*.bak
+*.mdf
+*.ldf
