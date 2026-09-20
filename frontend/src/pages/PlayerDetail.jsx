@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Alert, Spin } from 'antd'
+import { Alert, Spin, Table } from 'antd'
 import { layChiTiet, layBienDongGia } from '../api/players.js'
 import { dinhDangTien, dinhDangSo, dinhDangNgay } from '../utils/format.js'
 import ValueChart from '../components/ValueChart.jsx'
@@ -22,6 +22,59 @@ function Dong({ nhan, giaTri }) {
     </div>
   )
 }
+
+function OThongSo({ nhan, giaTri }) {
+  return (
+    <div style={{
+      background: 'var(--surface-card)',
+      borderRadius: 'var(--r-md)',
+      padding: 'var(--s-lg)',
+    }}>
+      <div className="t-caption" style={{ marginBottom: 4 }}>{nhan}</div>
+      <div style={{
+        fontSize: 24, fontWeight: 600, lineHeight: 1.2,
+        letterSpacing: '-0.6px', color: 'var(--ink)',
+      }}>
+        {giaTri}
+      </div>
+    </div>
+  )
+}
+
+const COT_CHUYEN_NHUONG = [
+  {
+    title: 'Mua giai',
+    dataIndex: 'transfer_season',
+    width: 100,
+  },
+  {
+    title: 'Ngay',
+    dataIndex: 'transfer_date',
+    width: 130,
+    render: v => dinhDangNgay(v),
+  },
+  {
+    title: 'Tu CLB',
+    dataIndex: 'from_club_name',
+    render: v => <span style={{ color: 'var(--mute)' }}>{v}</span>,
+  },
+  {
+    title: 'Den CLB',
+    dataIndex: 'to_club_name',
+    render: v => <span className="t-body-strong">{v}</span>,
+  },
+  {
+    title: 'Phi chuyen nhuong',
+    dataIndex: 'transfer_fee',
+    align: 'right',
+    width: 170,
+    render: v => v == null
+      ? <span className="t-sm">Khong co du lieu</span>
+      : <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
+          {dinhDangTien(v)}
+        </span>,
+  },
+]
 
 export default function PlayerDetail() {
   const { id } = useParams()
@@ -45,7 +98,11 @@ export default function PlayerDetail() {
   </div>
 
   const tt = bd.tom_tat || {}
+  const ts = ct.thong_so || {}
   const nhanLen = tt.gia_dau_tien > 0 ? tt.gia_hien_tai / tt.gia_dau_tien : null
+  const dsChuyenNhuong = [...(ct.chuyen_nhuong || [])].sort(
+    (a, b) => new Date(b.transfer_date) - new Date(a.transfer_date)
+  )
 
   return (
     <div className="container" style={{ padding: 'var(--s-xxl) var(--s-xl) var(--s-section)' }}>
@@ -93,23 +150,62 @@ export default function PlayerDetail() {
           <ValueChart diem={bd.diem_du_lieu} />
         </section>
 
-        {/* Thong tin */}
-        <aside style={{ background: 'var(--canvas)', borderRadius: 'var(--r-md)', padding: 'var(--s-xl)' }}>
-          <h2 className="t-heading-lg" style={{ marginBottom: 'var(--s-md)' }}>Thong tin</h2>
-          <Dong nhan="Tuoi"            giaTri={ct.tuoi} />
-          <Dong nhan="Ngay sinh"       giaTri={dinhDangNgay(ct.date_of_birth)} />
-          <Dong nhan="Quoc tich"       giaTri={ct.country_of_citizenship} />
-          <Dong nhan="Noi sinh"        giaTri={ct.country_of_birth} />
-          <Dong nhan="Chieu cao"       giaTri={ct.height_in_cm ? `${ct.height_in_cm} cm` : null} />
-          <Dong nhan="Chan thuan"      giaTri={ct.foot} />
-          <Dong nhan="Giai dau"        giaTri={ct.ten_giai_dau} />
-          <Dong nhan="Han hop dong"    giaTri={dinhDangNgay(ct.contract_expiration_date)} />
-          <Dong nhan="Nguoi dai dien"  giaTri={ct.agent_name} />
-          <Dong nhan="Gia cao nhat"    giaTri={dinhDangTien(tt.gia_cao_nhat)} />
-          <Dong nhan="Gia thap nhat"   giaTri={dinhDangTien(tt.gia_thap_nhat)} />
+        {/* Cot phai */}
+        <aside style={{ display: 'grid', gap: 'var(--s-xl)' }}>
+
+          {/* Thong so thi dau */}
+          <section style={{ background: 'var(--canvas)', borderRadius: 'var(--r-md)', padding: 'var(--s-xl)' }}>
+            <h2 className="t-heading-lg" style={{ marginBottom: 'var(--s-lg)' }}>Thong so thi dau</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--s-sm)' }}>
+              <OThongSo nhan="Tran dau"     giaTri={dinhDangSo(ts.so_tran)} />
+              <OThongSo nhan="Ban thang"    giaTri={dinhDangSo(ts.ban_thang)} />
+              <OThongSo nhan="Kien tao"     giaTri={dinhDangSo(ts.kien_tao)} />
+              <OThongSo nhan="Phut thi dau" giaTri={dinhDangSo(ts.so_phut)} />
+            </div>
+          </section>
+
+          {/* Thong tin */}
+          <section style={{ background: 'var(--canvas)', borderRadius: 'var(--r-md)', padding: 'var(--s-xl)' }}>
+            <h2 className="t-heading-lg" style={{ marginBottom: 'var(--s-md)' }}>Thong tin</h2>
+            <Dong nhan="Tuoi"            giaTri={ct.tuoi} />
+            <Dong nhan="Ngay sinh"       giaTri={dinhDangNgay(ct.date_of_birth)} />
+            <Dong nhan="Quoc tich"       giaTri={ct.country_of_citizenship} />
+            <Dong nhan="Noi sinh"        giaTri={ct.country_of_birth} />
+            <Dong nhan="Chieu cao"       giaTri={ct.height_in_cm ? `${ct.height_in_cm} cm` : null} />
+            <Dong nhan="Chan thuan"      giaTri={ct.foot} />
+            <Dong nhan="Giai dau"        giaTri={ct.ten_giai_dau} />
+            <Dong nhan="Han hop dong"    giaTri={dinhDangNgay(ct.contract_expiration_date)} />
+            <Dong nhan="Nguoi dai dien"  giaTri={ct.agent_name} />
+            <Dong nhan="Gia cao nhat"    giaTri={dinhDangTien(tt.gia_cao_nhat)} />
+            <Dong nhan="Gia thap nhat"   giaTri={dinhDangTien(tt.gia_thap_nhat)} />
+          </section>
+
         </aside>
 
       </div>
+
+      {/* Lich su chuyen nhuong */}
+      <section style={{
+        background: 'var(--canvas)', borderRadius: 'var(--r-md)',
+        padding: 'var(--s-xl)', marginTop: 'var(--s-xl)',
+      }}>
+        <h2 className="t-heading-lg" style={{ marginBottom: 'var(--s-lg)' }}>
+          Lich su chuyen nhuong
+        </h2>
+
+        {dsChuyenNhuong.length === 0 ? (
+          <p className="t-sm">Chua co du lieu chuyen nhuong.</p>
+        ) : (
+          <Table
+            rowKey={r => `${r.transfer_date}-${r.to_club_name}`}
+            columns={COT_CHUYEN_NHUONG}
+            dataSource={dsChuyenNhuong}
+            pagination={false}
+            size="middle"
+          />
+        )}
+      </section>
+
     </div>
   )
 }
