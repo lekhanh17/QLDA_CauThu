@@ -1,4 +1,4 @@
-/* =====================================================================
+﻿/* =====================================================================
    QLDA - HE THONG THEO DOI GIA TRI CHUYEN NHUONG CAU THU
    File 01: Tao database, bang staging va bang chinh
    ===================================================================== */
@@ -432,3 +432,8 @@ WHERE t.name NOT LIKE 'stg_%'
 GROUP BY t.name
 ORDER BY t.name;
 GO
+
+/*Xóa bảng staging trước khi Prisma quét */
+USE QLDA_CauThu;
+DROP TABLE stg_competitions, stg_clubs, stg_players,
+           stg_player_valuations, stg_transfers, stg_appearances;

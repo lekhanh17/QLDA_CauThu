@@ -1,111 +1,225 @@
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* Mau nhan */
+  --primary: #0d7a3e;
+  --primary-pressed: #0a5f30;
+  --primary-soft: #e8f3ec;
+  --on-primary: #ffffff;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* Be mat */
+  --canvas: #ffffff;
+  --surface-soft: #fbfbf9;
+  --surface-card: #f6f6f3;
+  --secondary-bg: #e5e5e0;
+  --secondary-pressed: #c8c8c1;
+  --surface-dark: #262622;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
+  /* Duong ke */
+  --hairline: #dadad3;
+  --hairline-soft: #e5e5e0;
+
+  /* Chu */
+  --ink: #000000;
+  --body: #33332e;
+  --mute: #62625b;
+  --ash: #91918c;
+  --stone: #c8c8c1;
+  --on-dark: #ffffff;
+
+  /* Ngu nghia */
+  --up: #0d7a3e;
+  --down: #cc001f;
+  --error: #9e0a0a;
+  --focus: #435ee5;
+
+  /* Bo goc */
+  --r-sm: 8px;
+  --r-md: 16px;
+  --r-lg: 32px;
+  --r-full: 9999px;
+
+  /* Khoang cach */
+  --s-xxs: 4px;
+  --s-xs: 6px;
+  --s-sm: 8px;
+  --s-md: 12px;
+  --s-lg: 16px;
+  --s-xl: 24px;
+  --s-xxl: 32px;
+  --s-section: 64px;
+
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+  color: var(--body);
+  background: var(--surface-soft);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  background: var(--surface-soft);
 }
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
+/* Thang chu theo DESIGN */
+.t-display-xl {
+  font-size: 70px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -1.2px;
+  color: var(--ink);
   margin: 0;
 }
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+.t-display-lg {
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.8px;
+  color: var(--ink);
+  margin: 0;
+}
+.t-heading-xl {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -1.2px;
+  color: var(--ink);
+  margin: 0;
+}
+.t-heading-lg {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ink);
+  margin: 0;
+}
+.t-heading-md {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink);
+  margin: 0;
+}
+.t-body {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+.t-body-strong {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.t-sm {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--mute);
+}
+.t-sm-strong {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.t-caption {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--mute);
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+/* Hero thu nho tren man hinh nho */
+@media (max-width: 1024px) {
+  .t-display-xl {
+    font-size: 56px;
+  }
+}
+@media (max-width: 768px) {
+  .t-display-xl {
+    font-size: 44px;
+    letter-spacing: -0.8px;
+  }
+}
+@media (max-width: 480px) {
+  .t-display-xl {
+    font-size: 36px;
+  }
+}
+
+/* Khung noi dung */
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--s-xl);
+}
+
+/* Nut antd: chu dam, khong do bong */
+.ant-btn {
+  font-weight: 700 !important;
+  box-shadow: none !important;
+}
+
+/* Card antd: phang, khong do bong */
+.ant-card {
+  box-shadow: none !important;
+}
+
+/* Chip loc dang pill */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 var(--s-lg);
+  border: none;
+  border-radius: var(--r-full);
+  background: var(--surface-card);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.chip--active {
+  background: var(--ink);
+  color: var(--on-dark);
+}
+
+/* Gia tri tang / giam */
+.delta-up {
+  color: var(--up);
+  font-weight: 700;
+}
+.delta-down {
+  color: var(--down);
+  font-weight: 700;
+}
+
+/* Card cau thu */
+.the-cau-thu {
+  display: block;
+  background: var(--canvas);
+  border-radius: var(--r-md);
+  padding: var(--s-lg);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 120ms ease, background 120ms ease;
+}
+.the-cau-thu:hover {
+  background: var(--surface-card);
+  transform: translateY(-2px);
+}
+
+/* Luoi card */
+.luoi-cau-thu {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--s-lg);
 }
