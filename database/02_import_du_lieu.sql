@@ -13,18 +13,29 @@
 
    THU TU CHAY: tung BUOC mot, boi den roi F5. Dung chay ca file.
 
+   !!! QUYEN CHAY !!!
+   BULK INSERT can quyen cap may chu (ADMINISTER BULK OPERATIONS).
+   Phai ket noi bang tai khoan quan tri (Windows Authentication),
+   KHONG dung tai khoan qlda_app. Tai khoan qlda_app chi danh cho
+   ung dung web va co dung quyen doc/ghi bang - do la chu y.
+
+   !!! EP KIEU SO - BAI HOC QUAN TRONG !!!
+   TRY_CAST tu chuoi co dau cham thap phan sang so nguyen tra ve NULL
+   ma KHONG bao loi:
+
+       SELECT TRY_CAST('25000.000' AS BIGINT);   -- NULL
+       SELECT TRY_CAST('25000'     AS BIGINT);   -- 25000
+
+   File CSV sinh tu pandas ghi cot so nguyen co o trong thanh dang
+   thap phan ('25000.000'). Vi vay moi cot so trong file nay deu ep
+   hai buoc: chuoi -> DECIMAL(20,3) -> INT/BIGINT.
+   Lan dau lam thieu buoc nay da mat 113.639 gia tri phi chuyen nhuong.
+
    !!! CANH BAO KHI CHAY LAI !!!
    File nay thiet ke cho lan chay DAU TIEN, luc chua co khoa ngoai.
    Neu da chay PHAN 4 cua file 01 roi ma muon import lai, phai go
-   khoa ngoai truoc, neu khong cac lenh DELETE se bao loi:
-
-     ALTER TABLE appearances        DROP CONSTRAINT FK_ap_player;
-     ALTER TABLE transfers          DROP CONSTRAINT FK_tr_player;
-     ALTER TABLE player_valuations  DROP CONSTRAINT FK_pv_player;
-     ALTER TABLE pl_players         DROP CONSTRAINT FK_plplayers_player;
-     ALTER TABLE players            DROP CONSTRAINT FK_players_club;
-     ALTER TABLE clubs              DROP CONSTRAINT FK_clubs_competition;
-
+   khoa ngoai truoc bang khoi lenh o cuoi file (BUOC 8), neu khong
+   cac lenh DELETE se bao loi.
    Import xong thi chay lai PHAN 4 de tao lai khoa ngoai.
    ===================================================================== */
 
@@ -116,10 +127,11 @@ TRUNCATE TABLE pl_players;
 GO
 
 INSERT INTO pl_players (player_id)
-SELECT DISTINCT TRY_CAST(NULLIF(TRIM(s.player_id), '') AS INT)
+SELECT DISTINCT
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.player_id), '') AS DECIMAL(20,3)) AS INT)
 FROM stg_players s
 WHERE TRIM(s.current_club_domestic_competition_id) = 'GB1'
-  AND TRY_CAST(NULLIF(TRIM(s.player_id), '') AS INT) IS NOT NULL;
+  AND TRY_CAST(TRY_CAST(NULLIF(TRIM(s.player_id), '') AS DECIMAL(20,3)) AS INT) IS NOT NULL;
 GO
 
 SELECT COUNT(*) AS so_cau_thu_ngoai_hang FROM pl_players;
@@ -150,11 +162,11 @@ SELECT
     NULLIF(TRIM(s.name), ''),
     NULLIF(TRIM(s.sub_type), ''),
     NULLIF(TRIM(s.[type]), ''),
-    TRY_CAST(NULLIF(TRIM(s.country_id), '') AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.country_id), '')  AS DECIMAL(20,3)) AS INT),
     NULLIF(TRIM(s.country_name), ''),
     NULLIF(TRIM(s.domestic_league_code), ''),
     NULLIF(TRIM(s.confederation), ''),
-    TRY_CAST(NULLIF(TRIM(s.total_clubs), '') AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.total_clubs), '') AS DECIMAL(20,3)) AS INT),
     NULLIF(TRIM(s.url), '')
 FROM stg_competitions s
 WHERE NULLIF(TRIM(s.competition_id), '') IS NOT NULL;
@@ -168,26 +180,28 @@ INSERT INTO clubs
      foreigners_number, foreigners_percentage, national_team_players,
      stadium_name, stadium_seats, net_transfer_record, coach_name, last_season, url)
 SELECT
-    TRY_CAST(TRIM(s.club_id) AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.club_id), '') AS DECIMAL(20,3)) AS INT),
     NULLIF(TRIM(s.club_code), ''),
     NULLIF(TRIM(s.name), ''),
     /* CLB tro toi giai dau khong ton tai -> de NULL, tranh gay khoa ngoai */
     CASE WHEN EXISTS (SELECT 1 FROM competitions c
                       WHERE c.competition_id = TRIM(s.domestic_competition_id))
          THEN TRIM(s.domestic_competition_id) END,
-    TRY_CAST(NULLIF(TRIM(s.squad_size), '') AS INT),
-    TRY_CAST(NULLIF(TRIM(s.average_age), '') AS DECIMAL(5,2)),
-    TRY_CAST(NULLIF(TRIM(s.foreigners_number), '') AS INT),
-    TRY_CAST(NULLIF(TRIM(s.foreigners_percentage), '') AS DECIMAL(5,2)),
-    TRY_CAST(NULLIF(TRIM(s.national_team_players), '') AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.squad_size), '')            AS DECIMAL(20,3)) AS INT),
+    /* average_age va foreigners_percentage von la so thap phan -> giu nguyen,
+       ep ve so nguyen la mat du lieu co chu dich (26.4 -> 26) */
+    TRY_CAST(NULLIF(TRIM(s.average_age), '')            AS DECIMAL(5,2)),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.foreigners_number), '')     AS DECIMAL(20,3)) AS INT),
+    TRY_CAST(NULLIF(TRIM(s.foreigners_percentage), '')  AS DECIMAL(5,2)),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.national_team_players), '') AS DECIMAL(20,3)) AS INT),
     NULLIF(TRIM(s.stadium_name), ''),
-    TRY_CAST(NULLIF(TRIM(s.stadium_seats), '') AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.stadium_seats), '')         AS DECIMAL(20,3)) AS INT),
     NULLIF(TRIM(s.net_transfer_record), ''),
     NULLIF(TRIM(s.coach_name), ''),
-    TRY_CAST(NULLIF(TRIM(s.last_season), '') AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.last_season), '')           AS DECIMAL(20,3)) AS INT),
     NULLIF(TRIM(s.url), '')
 FROM stg_clubs s
-WHERE TRY_CAST(NULLIF(TRIM(s.club_id), '') AS INT) IS NOT NULL;
+WHERE TRY_CAST(TRY_CAST(NULLIF(TRIM(s.club_id), '') AS DECIMAL(20,3)) AS INT) IS NOT NULL;
 GO
 
 
@@ -206,7 +220,7 @@ INSERT INTO players
      current_club_domestic_competition_id, market_value_in_eur,
      highest_market_value_in_eur, last_season, image_url, url)
 SELECT
-    TRY_CAST(TRIM(s.player_id) AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.player_id), '') AS DECIMAL(20,3)) AS INT),
     NULLIF(TRIM(s.first_name), ''),
     NULLIF(TRIM(s.last_name), ''),
     NULLIF(TRIM(s.name), ''),
@@ -218,22 +232,22 @@ SELECT
     NULLIF(TRIM(s.[position]), ''),
     NULLIF(TRIM(s.sub_position), ''),
     NULLIF(TRIM(s.foot), ''),
-    TRY_CAST(NULLIF(TRIM(s.height_in_cm), '') AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.height_in_cm), '') AS DECIMAL(20,3)) AS INT),
     TRY_CAST(NULLIF(TRIM(s.contract_expiration_date), '') AS DATE),
     NULLIF(TRIM(s.agent_name), ''),
     /* current_club_id co the la -1 hoac tro toi CLB khong ton tai -> NULL */
     CASE WHEN EXISTS (SELECT 1 FROM clubs c
-                      WHERE c.club_id = TRY_CAST(NULLIF(TRIM(s.current_club_id), '') AS INT))
-         THEN TRY_CAST(NULLIF(TRIM(s.current_club_id), '') AS INT) END,
+                      WHERE c.club_id = TRY_CAST(TRY_CAST(NULLIF(TRIM(s.current_club_id), '') AS DECIMAL(20,3)) AS INT))
+         THEN TRY_CAST(TRY_CAST(NULLIF(TRIM(s.current_club_id), '') AS DECIMAL(20,3)) AS INT) END,
     NULLIF(TRIM(s.current_club_name), ''),
     NULLIF(TRIM(s.current_club_domestic_competition_id), ''),
-    TRY_CAST(NULLIF(TRIM(s.market_value_in_eur), '') AS BIGINT),
-    TRY_CAST(NULLIF(TRIM(s.highest_market_value_in_eur), '') AS BIGINT),
-    TRY_CAST(NULLIF(TRIM(s.last_season), '') AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.market_value_in_eur), '')         AS DECIMAL(20,3)) AS BIGINT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.highest_market_value_in_eur), '') AS DECIMAL(20,3)) AS BIGINT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.last_season), '')                 AS DECIMAL(20,3)) AS INT),
     NULLIF(TRIM(s.image_url), ''),
     NULLIF(TRIM(s.url), '')
 FROM stg_players s
-WHERE TRY_CAST(NULLIF(TRIM(s.player_id), '') AS INT)
+WHERE TRY_CAST(TRY_CAST(NULLIF(TRIM(s.player_id), '') AS DECIMAL(20,3)) AS INT)
       IN (SELECT player_id FROM pl_players);
 GO
 
@@ -253,20 +267,23 @@ INSERT INTO player_valuations
     (player_id, valuation_date, market_value_in_eur,
      current_club_id, current_club_name, player_club_domestic_competition_id)
 SELECT
-    TRY_CAST(TRIM(s.player_id) AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.player_id), '') AS DECIMAL(20,3)) AS INT),
     TRY_CAST(TRIM(s.[date]) AS DATE),
-    TRY_CAST(NULLIF(TRIM(s.market_value_in_eur), '') AS BIGINT),
-    TRY_CAST(NULLIF(TRIM(s.current_club_id), '') AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.market_value_in_eur), '') AS DECIMAL(20,3)) AS BIGINT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.current_club_id), '')     AS DECIMAL(20,3)) AS INT),
     NULLIF(TRIM(s.current_club_name), ''),
     NULLIF(TRIM(s.player_club_domestic_competition_id), '')
 FROM stg_player_valuations s
-WHERE TRY_CAST(NULLIF(TRIM(s.player_id), '') AS INT)
+WHERE TRY_CAST(TRY_CAST(NULLIF(TRIM(s.player_id), '') AS DECIMAL(20,3)) AS INT)
       IN (SELECT player_id FROM pl_players)
   /* bo dong co ngay hong, vi cot valuation_date khai bao NOT NULL */
   AND TRY_CAST(TRIM(s.[date]) AS DATE) IS NOT NULL;
 GO
 
-/* --- 5.2 transfers ---------------------------------------------------- */
+/* --- 5.2 transfers ----------------------------------------------------
+   transfer_fee va market_value_in_eur o file nay duoc ghi dang thap phan
+   ('25000.000'). Day chinh la hai cot tung bi mat sach du lieu.
+   ---------------------------------------------------------------------- */
 DELETE FROM transfers;
 GO
 
@@ -274,17 +291,17 @@ INSERT INTO transfers
     (player_id, transfer_date, transfer_season, from_club_id, to_club_id,
      from_club_name, to_club_name, transfer_fee, market_value_in_eur)
 SELECT
-    TRY_CAST(TRIM(s.player_id) AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.player_id), '') AS DECIMAL(20,3)) AS INT),
     TRY_CAST(TRIM(s.transfer_date) AS DATE),
     NULLIF(TRIM(s.transfer_season), ''),
-    TRY_CAST(NULLIF(TRIM(s.from_club_id), '') AS INT),
-    TRY_CAST(NULLIF(TRIM(s.to_club_id), '') AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.from_club_id), '')        AS DECIMAL(20,3)) AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.to_club_id), '')          AS DECIMAL(20,3)) AS INT),
     NULLIF(TRIM(s.from_club_name), ''),
     NULLIF(TRIM(s.to_club_name), ''),
-    TRY_CAST(NULLIF(TRIM(s.transfer_fee), '') AS BIGINT),
-    TRY_CAST(NULLIF(TRIM(s.market_value_in_eur), '') AS BIGINT)
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.transfer_fee), '')        AS DECIMAL(20,3)) AS BIGINT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.market_value_in_eur), '') AS DECIMAL(20,3)) AS BIGINT)
 FROM stg_transfers s
-WHERE TRY_CAST(NULLIF(TRIM(s.player_id), '') AS INT)
+WHERE TRY_CAST(TRY_CAST(NULLIF(TRIM(s.player_id), '') AS DECIMAL(20,3)) AS INT)
       IN (SELECT player_id FROM pl_players)
   AND TRY_CAST(TRIM(s.transfer_date) AS DATE) IS NOT NULL;
 GO
@@ -302,19 +319,19 @@ INSERT INTO appearances
      yellow_cards, red_cards)
 SELECT
     TRIM(s.appearance_id),
-    TRY_CAST(NULLIF(TRIM(s.game_id), '') AS INT),
-    TRY_CAST(TRIM(s.player_id) AS INT),
-    TRY_CAST(NULLIF(TRIM(s.player_club_id), '') AS INT),
-    TRY_CAST(NULLIF(TRIM(s.player_current_club_id), '') AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.game_id), '')                AS DECIMAL(20,3)) AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.player_id), '')              AS DECIMAL(20,3)) AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.player_club_id), '')         AS DECIMAL(20,3)) AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.player_current_club_id), '') AS DECIMAL(20,3)) AS INT),
     TRY_CAST(NULLIF(TRIM(s.[date]), '') AS DATE),
     NULLIF(TRIM(s.competition_id), ''),
-    TRY_CAST(NULLIF(TRIM(s.goals), '') AS INT),
-    TRY_CAST(NULLIF(TRIM(s.assists), '') AS INT),
-    TRY_CAST(NULLIF(TRIM(s.minutes_played), '') AS INT),
-    TRY_CAST(NULLIF(TRIM(s.yellow_cards), '') AS INT),
-    TRY_CAST(NULLIF(TRIM(s.red_cards), '') AS INT)
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.goals), '')          AS DECIMAL(20,3)) AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.assists), '')        AS DECIMAL(20,3)) AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.minutes_played), '') AS DECIMAL(20,3)) AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.yellow_cards), '')   AS DECIMAL(20,3)) AS INT),
+    TRY_CAST(TRY_CAST(NULLIF(TRIM(s.red_cards), '')      AS DECIMAL(20,3)) AS INT)
 FROM stg_appearances s
-WHERE TRY_CAST(NULLIF(TRIM(s.player_id), '') AS INT)
+WHERE TRY_CAST(TRY_CAST(NULLIF(TRIM(s.player_id), '') AS DECIMAL(20,3)) AS INT)
       IN (SELECT player_id FROM pl_players)
   AND NULLIF(TRIM(s.appearance_id), '') IS NOT NULL
   -- AND TRY_CAST(NULLIF(TRIM(s.[date]), '') AS DATE) >= '2018-01-01'
@@ -323,7 +340,7 @@ GO
 
 
 /* =====================================================================
-   BUOC 6 - KIEM TRA KET QUA
+   BUOC 6 - KIEM TRA SO DONG
    ===================================================================== */
 
 SELECT 'competitions'      AS bang, COUNT(*) AS so_dong FROM competitions
@@ -334,6 +351,59 @@ UNION ALL SELECT 'player_valuations', COUNT(*) FROM player_valuations
 UNION ALL SELECT 'transfers',         COUNT(*) FROM transfers
 UNION ALL SELECT 'appearances',       COUNT(*) FROM appearances;
 GO
+
+
+/* =====================================================================
+   BUOC 6.5 - KIEM TRA KHONG MAT DU LIEU KHI EP KIEU
+
+   Dem so dong DAT dong nay: so dong co gia tri o NGUON (staging) phai
+   bang so dong co gia tri o DICH (bang chinh).
+   Lech nhau = ep kieu that bai am tham, phai dieu tra ngay.
+
+   COUNT(*)   dem moi dong.
+   COUNT(cot) chi dem dong co gia tri khac NULL.
+   Chenh lech giua hai so nay chinh la cho du lieu bi mat.
+   ===================================================================== */
+
+SELECT 'players.market_value_in_eur' AS cot,
+       (SELECT COUNT(*) FROM stg_players s
+         WHERE NULLIF(TRIM(s.market_value_in_eur), '') IS NOT NULL
+           AND TRY_CAST(TRY_CAST(NULLIF(TRIM(s.player_id), '') AS DECIMAL(20,3)) AS INT)
+               IN (SELECT player_id FROM pl_players))          AS nguon,
+       (SELECT COUNT(market_value_in_eur) FROM players)        AS dich
+
+UNION ALL
+SELECT 'player_valuations.market_value_in_eur',
+       (SELECT COUNT(*) FROM stg_player_valuations s
+         WHERE NULLIF(TRIM(s.market_value_in_eur), '') IS NOT NULL
+           AND TRY_CAST(TRIM(s.[date]) AS DATE) IS NOT NULL
+           AND TRY_CAST(TRY_CAST(NULLIF(TRIM(s.player_id), '') AS DECIMAL(20,3)) AS INT)
+               IN (SELECT player_id FROM pl_players)),
+       (SELECT COUNT(market_value_in_eur) FROM player_valuations)
+
+UNION ALL
+SELECT 'transfers.transfer_fee',
+       (SELECT COUNT(*) FROM stg_transfers s
+         WHERE NULLIF(TRIM(s.transfer_fee), '') IS NOT NULL
+           AND TRY_CAST(TRIM(s.transfer_date) AS DATE) IS NOT NULL
+           AND TRY_CAST(TRY_CAST(NULLIF(TRIM(s.player_id), '') AS DECIMAL(20,3)) AS INT)
+               IN (SELECT player_id FROM pl_players)),
+       (SELECT COUNT(transfer_fee) FROM transfers)
+
+UNION ALL
+SELECT 'appearances.minutes_played',
+       (SELECT COUNT(*) FROM stg_appearances s
+         WHERE NULLIF(TRIM(s.minutes_played), '') IS NOT NULL
+           AND NULLIF(TRIM(s.appearance_id), '') IS NOT NULL
+           AND TRY_CAST(TRY_CAST(NULLIF(TRIM(s.player_id), '') AS DECIMAL(20,3)) AS INT)
+               IN (SELECT player_id FROM pl_players)),
+       (SELECT COUNT(minutes_played) FROM appearances);
+GO
+
+
+/* =====================================================================
+   BUOC 7 - KIEM TRA TOAN VEN VA XEM DU LIEU THAT
+   ===================================================================== */
 
 /* --- Kiem tra khoa ngoai truoc khi chay PHAN 4 file 01 ---------------
    Ca 3 cau duoi PHAI tra ve 0 dong. Co dong nao la PHAN 4 se bao loi.
@@ -370,11 +440,17 @@ FROM player_valuations v
 JOIN players p ON p.player_id = v.player_id
 WHERE p.player_id = (SELECT TOP 1 player_id FROM players ORDER BY market_value_in_eur DESC)
 ORDER BY v.valuation_date;
+
+-- 10 vu chuyen nhuong dat nhat (kiem chung cot transfer_fee)
+SELECT TOP 10 transfer_date, from_club_name, to_club_name, transfer_fee
+FROM transfers
+WHERE transfer_fee > 0
+ORDER BY transfer_fee DESC;
 GO
 
 
 /* =====================================================================
-   BUOC 7 - SAU KHI MOI THU DA DUNG
+   BUOC 8 - SAU KHI MOI THU DA DUNG
 
    1. Quay lai file 01_tao_bang.sql, chay PHAN 4 (khoa ngoai + chi muc).
    2. Chi khi da chay xong PHAN 4 va kiem tra on, moi xoa bang staging:
@@ -387,20 +463,18 @@ GO
    ===================================================================== */
 
 
-   USE QLDA_CauThu;
-GO
+/* =====================================================================
+   PHU LUC - GO KHOA NGOAI DE IMPORT LAI
 
-ALTER TABLE appearances        DROP CONSTRAINT FK_ap_player;
-ALTER TABLE transfers          DROP CONSTRAINT FK_tr_player;
-ALTER TABLE player_valuations  DROP CONSTRAINT FK_pv_player;
-ALTER TABLE pl_players         DROP CONSTRAINT FK_plplayers_player;
-ALTER TABLE players            DROP CONSTRAINT FK_players_club;
-ALTER TABLE clubs              DROP CONSTRAINT FK_clubs_competition;
-GO
+   CHI boi den va chay khoi duoi khi can import lai tu dau tren mot
+   database DA co khoa ngoai. Khong phai buoc binh thuong cua file nay.
+   Go xong thi quay lai BUOC 1, va import xong phai chay lai PHAN 4
+   cua file 01 de tao lai khoa ngoai.
 
-SELECT 'stg_competitions' AS bang, COUNT(*) AS so_dong FROM stg_competitions
-UNION ALL SELECT 'stg_clubs',             COUNT(*) FROM stg_clubs
-UNION ALL SELECT 'stg_players',           COUNT(*) FROM stg_players
-UNION ALL SELECT 'stg_player_valuations', COUNT(*) FROM stg_player_valuations
-UNION ALL SELECT 'stg_transfers',         COUNT(*) FROM stg_transfers
-UNION ALL SELECT 'stg_appearances',       COUNT(*) FROM stg_appearances;
+   ALTER TABLE appearances        DROP CONSTRAINT FK_ap_player;
+   ALTER TABLE transfers          DROP CONSTRAINT FK_tr_player;
+   ALTER TABLE player_valuations  DROP CONSTRAINT FK_pv_player;
+   ALTER TABLE pl_players         DROP CONSTRAINT FK_plplayers_player;
+   ALTER TABLE players            DROP CONSTRAINT FK_players_club;
+   ALTER TABLE clubs              DROP CONSTRAINT FK_clubs_competition;
+   ===================================================================== */
