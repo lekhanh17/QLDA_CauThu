@@ -223,3 +223,21 @@ body {
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: var(--s-lg);
 }
+
+/* Bang so sanh */
+.bang-ss { width: 100%; border-collapse: collapse; }
+.bang-ss th, .bang-ss td {
+  padding: var(--s-md) var(--s-lg);
+  text-align: left;
+  border-bottom: 1px solid var(--hairline-soft);
+}
+.bang-ss thead th {
+  background: var(--surface-card);
+  font-size: 14px; font-weight: 700; color: var(--ink);
+  border-bottom: 1px solid var(--hairline);
+}
+.bang-ss thead th:first-child { border-radius: var(--r-md) 0 0 0; }
+.bang-ss thead th:last-child  { border-radius: 0 var(--r-md) 0 0; }
+.bang-ss td.nhan { color: var(--mute); font-size: 14px; width: 220px; }
+.bang-ss td.so   { font-variant-numeric: tabular-nums; }
+.bang-ss td.dan  { background: var(--primary-soft); font-weight: 700; }
